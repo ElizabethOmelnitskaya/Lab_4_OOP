@@ -1,281 +1,178 @@
+/* Последовательность чисел Фибоначчи: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987... */
 #pragma once
-#include <iterator>
 #include <algorithm>
-#include <string>
+#include <iterator>
 
 using namespace std;
 
-template <typename T>
-class Fibonacci
-{
-private:
-	int FirstNumber = 0, SecondNumber = 1, const_Size = 20;
-	char FirstString = 'a', SecondString = 'b';
+template <typename T> class const_iterator;
 
+template <typename T> class Fibonacci {
+private:
 	T first, second;
 	int Size;
-
 public:
-	class const_iterator : public iterator<bidirectional_iterator_tag, T> {
-	private:
-		int pos;
-		T cur, next;
-	public:
-		const_iterator(){
-			pos = 0;
-			cur = first;
-			next = second;
+	friend class const_iterator<T>;
+	
+	Fibonacci(int size) {
+		this->Size = size;
+		this->first = 0;
+		this->second = 1;
+	};
+
+	Fibonacci(int size, T First, T Second) {
+		this->first = First;
+		this->second = Second;
+		this->Size = size;
+	};
+
+	const_iterator<T> cbegin() const { return const_iterator<T>(*this); };
+
+	const_iterator<T> cend() const { return const_iterator<T>(*this, this->Size); };
+
+	static void next(T& a, T& b) {
+		T n = a + b;
+		a = b;
+		b = n;
+	};
+
+	static void previous(T& a, T& b) {
+		T p = b - a;
+		b = a;
+		a = p;
+	};
+
+	static T calculate(T&a, T&b, int step) {
+		while (step-- > 0) next(a, b);
+		while (step++ > -1) previous(a, b);
+		return b;
+	};
+
+	T at(int index) const {
+		switch (index) {
+		case 0: 
+			return a;
+		case 1: 
+			return b;
+		default: {
+			T a = this->first;
+			T b = this->second;
+			return calculate(first, second, index);
 		}
-
-		const_iterator(const T& cur, const T& next, int pos){
-			this->cur = cur;
-			this->next = next;
-			this->pos = pos;
-		}
-
-		const_iterator(const const_iterator& other) {
-			pos = other.pos;
-			cur = other.cur;
-			next = other.next;
-		}
-
-		const_iterator& operator=(const const_iterator& other) {
-			cur = other.cur;
-			pos = other.pos;
-			next = other.next;
-			return *this;
-		}
-
-		bool operator<(const const_iterator& other) const {
-			return pos < other.pos;
-		}
-
-		bool operator>(const const_iterator& other) const {
-			return pos > other.pos;
-		}
-
-		bool operator<=(const const_iterator& other) const {
-			return *this < other || *this == other;
-		}
-
-		bool operator>=(const const_iterator& other) const {
-			return *this > other || *this == other;
-		}
-
-		bool operator==(const const_iterator& other) const {
-			return cur == other.cur && next == other.next && pos == other.pos;
-		}
-
-		bool operator!=(const const_iterator& other) const {
-			return cur != other.cur || next != other.next || pos != other.pos;
-		}
-
-		T& operator*(){ return cur; }
-
-		const_iterator& operator++() {
-			T tmp = cur;
-			cur = next;
-			next += tmp;
-			++pos;
-			return *this;
-		}
-
-		const_iterator operator++(int) {
-			T tmp = cur;
-			cur = next;
-			next += tmp;
-			pos++;
-			return *this;
-		}
-
-		const_iterator& operator--() {
-			T tmp = next;
-			next = cur;
-			cur = tmp - cur;
-			--pos;
-			return *this;
-		}
-
-		const_iterator operator--(int) {
-			T tmp = next;
-			next = cur;
-			cur = tmp - cur;
-			pos--;
-			return *this;
-		}
-
-		const_iterator& operator+(int num) const {
-			const_iterator result(*this);
-			if (num > 0)
-				for (int i = 0; i < num; i++)
-					result++;
-			else
-				for (int i = 0; i > num; i--)
-					result--;
-			return result;
-		}
-
-		const_iterator& operator-(int num) const {
-			const_iterator result(*this);
-			if (num > 0)
-				for (int i = 0; i < num; i++)
-					result--;
-			else
-				for (int i = 0; i > num; i--)
-					result++;
-			return result;
-		}
-
-		int operator-(const const_iterator& other) const {
-			return pos - other.pos;
-		}
-
-		const_iterator& operator+=(int num) {
-			if (num > 0)
-				for (int i = 0; i < num; i++)
-					(*this)++;
-			else
-				for (int i = 0; i > num; i--)
-					(*this)--;
-			return *this;
-		}
-
-		const_iterator& operator-=(int num) {
-			if (num > 0)
-				for (int i = 0; i < num; i++)
-					(*this)--;
-			else
-				for (int i = 0; i > num; i--)
-					(*this)++;
-			return *this;
-		}
-
-		T& operator[](int num) const { return *(*this + num); }
-
-		void sort(const_iterator &other) {
-			T tmp = cur;
-			cur = other.cur;
-			other.cur = tmp;
-			tmp = next;
-			next = other.next;
-			other.next = tmp;
-			tmp = pos;
-			pos = other.pos;
-			other.pos = tmp;
 		}
 	};
 
-	Fibonacci();
-	Fibonacci(int);
-	Fibonacci(int, const T&, const T&); //конструктор, задающий размер контейнера и первые два значения 
+	void realize(int size) { this->Size = size; };
 
-	const_iterator cbegin() const { //возвращающий константные stl-итераторы 
-		return const_iterator(first, second, 0); 
-	} 
-
-	const_iterator cend() const { //возвращающий константные stl-итераторы 
-		const_iterator result(first, second, 0);
-		result += size() - 1;
-		return result;
-	}
-
-	T& at(int index) const{ // возвращающий index - ое значение
-		if (index >= size() || index < 0)
-			throw "Index out of range!";
-		const_iterator it = cbegin();
-		it += index;
-		return *it;
-	}
-
-	void resize(int); //изменение размера контейнера
-	int size() const; //возвращает размер контейнера
-
-	~Fibonacci();
+	int size() { return this->Size; };
 };
 
-template <>//для int, long, float, double - задает 0 и 1 
-Fibonacci<int>::Fibonacci(){
-	Size = const_Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<long int>::Fibonacci() {
-	Size = const_Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<float>::Fibonacci() {
-	Size = const_Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<double>::Fibonacci() {
-	Size = const_Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<int>::Fibonacci(int Size) {
-	this->Size = Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<long int>::Fibonacci(int Size) {
-	this->Size = Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<float>::Fibonacci(int Size) {
-	this->Size = Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-template<>
-Fibonacci<double>::Fibonacci(int Size) {
-	this->Size = Size;
-	first = FirstNumber;
-	second = SecondNumber;
-}
-
-
-template<> //для string - задает "a" и "b"
-Fibonacci<std::string>::Fibonacci() {
-	Size = const_Size;
-	first.append(&FirstString);
-	second.append(&SecondString);
-}
-
-template<>
-Fibonacci<std::string>::Fibonacci(int Size) {
-	this->Size = Size;
-	first.append(&FirstString);
-	second.append(&SecondString);;
-}
 
 template <typename T>
-Fibonacci<T>::Fibonacci(int Size, const T& first, const T& second){
-	this->Size = Size;
-	this->first = first;
-	this->second = second;
+class const_iterator : public iterator<bidirectional_iterator_tag, T> {
+	Fibonacci<T> const& fib;
+	T a, b;
+	int calc, _index;
+public:
+	const_iterator(Fibonacci<T> const& F) :fib(F) {
+		a = fib.first;
+		b = fib.second;
+		_index = 0;
+		calc = 1;
+	}
+
+	const_iterator(Fibonacci<T> const& F, int index) :fib(F) {
+		a = fib.first;
+		b = fib.second;
+		_index = index;
+		calc = 1;
+	}
+
+	const_iterator& operator++() {
+		this->_index++;
+		return *this;
+	}
+
+	const_iterator operator++(int) { this->_index--; }
+
+	const_iterator& operator--() {
+		this->_index--;
+		return *this;
+
+	}
+
+	const_iterator operator--(int) {
+		this->_index--;
+		return *this;
+	}
+
+	const_iterator& operator-=(int index) {
+		this->it_index -= index;
+		return *this;
+	}
+
+	const_iterator& operator+=(int index) {
+		this->it_index += index;
+		return *this;
+	}
+
+	T operator*() {
+		int step = (_index)-(calc);
+		switch (step) {
+		case -1: 
+			return a;
+		case 0: 
+			return b;
+		default:  {
+			calc += step;
+			return 	fib.calculate(a, b, step);
+			}
+		}
+	}
+
+	T* operator ->() { return &operator*(); }
+	
+	bool operator>(const_iterator &iter) { return (this->_index > iter._index); }
+	
+	bool operator<(const_iterator &iter) { return (this->_index < iter._index); }
+	
+	bool operator>=(const_iterator &iter) {	return (this->_index >= iter._index); }
+	
+	bool operator<=(const_iterator &iter) { return (this->_index <= iter._index); }
+	
+	bool operator==(const_iterator &iter) {	return (this->_index == iter._index); }
+	
+	bool operator!=(const_iterator &iter) { return !(this->_index == iter._index); }
+	
+	const_iterator& operator =(const const_iterator& iter) {
+		this->_index = iter._index;
+		this->calc = iter.calc;
+		this->a = iter.a;
+		this->b = iter.b;
+		return *this;
+	}
+};
+
+template<>
+Fibonacci<string>::Fibonacci(int size) {
+	Size = size;
+	first = "a";
+	second = "b";
 }
 
-template <typename T>
-void Fibonacci<T>::resize(int Size) { this->Size = Size; }
+template<>
+void Fibonacci<string>::previous(string& s1, string& s2) {
+	string p = p.erase(0, s1.length()); // erase удаляет из строки 
+									   //последовательность символ 
+									   //заданной длины, начиная 
+								       //с указанной позиции. 
+	s2 = s1;
+	s1 = p;
+}
 
-template <typename T>
-int Fibonacci<T>::size() const { return Size; } //{ return this->size_var; }
-
-template <typename T>
-Fibonacci<T>::~Fibonacci() {}
+template<>
+void Fibonacci<string>::next(string& s1, string&s2) {
+	string n = s1.append(s2);// добавляет строку(символ) к концу строки. 
+	s1 = s2;
+	s2 = n;
+};
